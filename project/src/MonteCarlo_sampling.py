@@ -5,28 +5,35 @@ class MC_sampling:
     def __init__(self, prob_matrix):
         self.prob_matrix = prob_matrix
         self.node_dim = prob_matrix.shape[0]
-        self.z = np.zeros(self.node_dim)
+        self.Z = np.zeros(((self.node_dim), (self.node_dim)))
     
-    #returns a vector containing activation probs of nodes
+    #returns a matrix containing activation probs of nodes given the seed (seed on rows, node on columns)
     def estimate_activ_prob(self, n_iter):
+        seeds = np.arange(self.node_dim)
         #perform multiple iterations of MC
-        for t in range(n_iter):
-            #generate random live-edge graph according to prob_matrix
-            live_edge_mask = np.empty(shape=[self.node_dim, self.node_dim])
-            for i in range(self.node_dim):
-                for j in range(self.node_dim):
-                    live_edge_mask[i, j] = np.random.choice([0, 1], p=[1-self.prob_matrix[i, j], self.prob_matrix[i, j]])
+        for seed in seeds:
+            for t in range(n_iter):
+                #Random walk generating the live-edge graph according to prob_matrix
+                live_edge_mask = np.zeros(shape=[self.node_dim, self.node_dim])
+                already_actives = []
+                last_actives = [seed]
+                while last_actives:
+                    for node in last_actives:
+                        if node not in already_actives:
+                            already_actives.append(node)
+                    origin = int(last_actives.pop())
+                    for dest in range(self.node_dim):
+                        edge_activation = np.random.choice([0, 1], p=[1-self.prob_matrix[origin, dest], self.prob_matrix[origin, dest]])
+                        if edge_activation > 0 and (dest not in already_actives):
+                            live_edge_mask[origin, dest] = edge_activation
+                            last_actives.append(dest)
 
-            #TODO: capire questione dei seed
-            seed=0
-            #get all active nodes of the previously generated live-edge graph
-            active_nodes = self.depth_first_tree_search(live_edge_mask, seed, visited = set())
-            for i in active_nodes:
-                #TODO: da capire se è giusto non considerare il seed come attivato
-                if i != seed:
-                    self.z[i] +=1
+                #get all active nodes of the previously generated live-edge graph
+                active_nodes = self.depth_first_tree_search(live_edge_mask, seed, visited = set())
+                for i in active_nodes:
+                    self.Z[seed, i] +=1
 
-        return self.z / n_iter
+        return self.Z / n_iter
 
     def depth_first_tree_search(self, live_edge_graph, start, visited = set()):
         visited.add(start)

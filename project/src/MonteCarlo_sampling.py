@@ -44,9 +44,12 @@ class MC_sampling:
 
         return visited
 
+''''
+For testing 
 
 n_nodes = 5 
 prob_matrix = np.random.uniform(0.0, 0.5,(n_nodes, n_nodes))
 estimator = MC_sampling(prob_matrix)
 activation_probs = estimator.estimate_activ_prob(100)
 print(activation_probs)
+'''

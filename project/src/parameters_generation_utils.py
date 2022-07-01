@@ -26,3 +26,12 @@ def prob_matrix_generation(primary_to_secondary_mapping, lambda_parameter):
             prob_matrix[user_class][item][secondary] = to_secondary_prob
 
     return prob_matrix
+
+# return the theoretical number of iterations needed to have certain confidence on the approximation result
+# with probability at least 1-delta, estimated activation probs of every node is subject to an additive error +/- epsilon*n (n number of nodes)
+def MC_num_iterations(prob_matrix, epsilon_n=0.05, delta=0.05):
+    n = prob_matrix.shape[0]
+    epsilon = epsilon_n / n
+    # obs: check if this log10(n) is correct (it should be log10(|S|) where S is the set of seeds)
+    return int((1/epsilon**2)*np.log10(n)*np.log10(1/delta))
+

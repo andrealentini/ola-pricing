@@ -17,13 +17,14 @@ def prob_matrix_generation(primary_to_secondary_mapping, lambda_parameter):
     prob_matrix = np.zeros((3,5,5))
     for user_class in range(0,3):
         for item in range(0,5):
-            primary = primary_to_secondary_mapping[item][0]
-            to_primary_prob = np.random.uniform(0, 1)
-            prob_matrix[user_class][item][primary] = to_primary_prob
 
-            secondary = primary_to_secondary_mapping[item][1]
-            to_secondary_prob = np.random.uniform(0, 1) * lambda_parameter
-            prob_matrix[user_class][item][secondary] = to_secondary_prob
+            first_secondary = primary_to_secondary_mapping[item][0]
+            to_first_secondary_prob = np.random.uniform(0, 1)
+            prob_matrix[user_class][item][first_secondary] = to_first_secondary_prob
+
+            second_secondary = primary_to_secondary_mapping[item][1]
+            to_second_secondary_prob = np.random.uniform(0, 1) * lambda_parameter
+            prob_matrix[user_class][item][second_secondary] = to_second_secondary_prob
 
     return prob_matrix
 

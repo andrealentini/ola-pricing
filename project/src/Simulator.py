@@ -2,23 +2,34 @@ import random
 
 import numpy as np
 from Environment import Environment
-
+from parameters_generation_utils import alpha_generation
 
 class Simulator:
 
-    def __init__(self, days, users,
-                 prices, prob_matrix, alphas, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr):
+    def __init__(self, days, users, alpha_parameters, seed, bandit,
+                 prices, prob_matrix, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr):
         self.days = days
         self.users = users #should be different every day? "Every day, there is a random number of potential new customers"
-        #self.bandit = bandit
-        self.e = Environment(prices, prob_matrix, alphas, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr)
+        self.alpha_parameters = alpha_parameters #3x6 (3 class of users -> 3 sets of alpha)
+        self.e = Environment(prices, prob_matrix, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr)
+        self.seed = seed
+        self.bandit = bandit
+        self.n_items = self.e.prices.shape[0]
+
+
 
     def run_simulation(self, debug):
 
+        rewards_per_day = [[] for i in range(self.n_items)]
+
         for day in range(0, self.days):
 
-            #today_prices = bandit.pull_prices() at the beginning of a new day we have to set the prices
-            today_prices = [0,0,0,0,0] #index of the price of each item
+            alphas = alpha_generation(self.alpha_parameters, seed=self.seed)
+
+            today_prices = self.bandit.pull_prices()
+            print(today_prices)
+
+            observed_rewards = [[] for i in range(self.n_items)]
 
             for user in range(0, self.users):
                 #retrieve the user features -> user class
@@ -29,10 +40,10 @@ class Simulator:
 
                 #starting item, -1 means that the user lands on the webpage of a competitor
                 items = np.concatenate((np.array([-1]), self.e.items), axis=0)
-                starting_point = np.random.choice(items, p=self.e.alphas[user_class])
+                starting_point = np.random.choice(items, p = alphas[user_class])
 
                 #to save bought_items that we cannot visit in the future
-                bought_items = np.zeros(self.e.items.shape[0])
+                bought_items = np.zeros(self.n_items)
 
                 #if the user didn't land on a competitor webpage
                 if starting_point != -1:
@@ -48,6 +59,8 @@ class Simulator:
                         if self.e.purchase(primary, today_prices[primary], user_class):
                             if debug: print(str(primary) + ' purchased')
 
+                            observed_rewards[primary].append(1)
+
                             n_items_sold = self.e.get_items_sold(primary, user_class)
                             if debug: print('items sold',n_items_sold)
 
@@ -58,17 +71,21 @@ class Simulator:
                             clicked_secondary = self.e.get_clicked_secondary(user_class, bought_items, primary)
                             if debug: print('clicked secondary',clicked_secondary)
                             items_to_visit = items_to_visit + clicked_secondary
-
-                            #retrieve the current primary
-                            #random.shuffle(items_to_visit) necessary?
+                        else:
+                            observed_rewards[primary].append(0)
 
                         if len(items_to_visit) != 0:
-                            primary = items_to_visit[-1]
-                            items_to_visit.pop()
+                            # random.shuffle(items_to_visit) necessary?
+                            primary = items_to_visit.pop()
                         else:
                             primary = -1
 
-            #GIORNATA FINITA
-            #aggiornare bandit pricing
+            self.bandit.update(today_prices, observed_rewards)
+
+        #Days ended
+        for item in range(0, self.n_items):
+            rewards_per_day[item].append(self.bandit.collected_rewards_per_item[item])
+
+
 
 

@@ -2,13 +2,11 @@ import numpy as np
 
 class Environment:
 
-    def __init__(self, prices, prob_matrix, alphas, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr):
+    def __init__(self, prices, prob_matrix, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr):
 
         self.prices = prices #the four prices for each product 5x4
         self.items = np.arange(0,5,1) #the five items
         self.prob_matrix = prob_matrix #the probability matrices 5x5x3
-        #self.margins i margini per ogni prodotto vanno considerati?????
-        self.alphas = alphas #3x6 (3 class of users -> 3 sets of alpha)
         self.feature_1_dist = feature_1_dist #feature 1 distribution
         self.feature_2_dist = feature_2_dist #feature 2 distribution
         self.conversion_rates = conversion_rates #5x4x3
@@ -34,7 +32,7 @@ class Environment:
     #equivalent of the round method
     def purchase(self, item, price, user_class):
         purchase_outcome = np.random.binomial(1, self.conversion_rates[user_class][item][price])
-        return 1 #1 or 0 = the user buys or not
+        return purchase_outcome #1 or 0 = the user buys or not
 
     #retrieve the secondary items clicked by the user
     def get_clicked_secondary(self, user_class, bought_items, primary):
@@ -49,7 +47,7 @@ class Environment:
 
 
     def get_items_sold(self, item, user_class):
-        mu, sigma = self.n_items_to_buy_distr[user_class, item]
+        mu, sigma = self.n_items_to_buy_distr[user_class, item] #todo è sigma al quadrato???
         items_sold = int(np.round(np.random.normal(mu, sigma, 1)))
         if items_sold == 0.0:
             items_sold = 1

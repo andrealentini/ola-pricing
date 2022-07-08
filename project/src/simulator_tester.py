@@ -78,6 +78,7 @@ bandit = UCB_Learner(prices)
 
 days = 10
 users = 1000
+n_simulations = 10
 
 opt = np.zeros((3,5))
 
@@ -89,6 +90,7 @@ for user_class in range(0, conversion_rates.shape[0]):
 #test simulation
 S = Simulator(days,
               users,
+              n_simulations,
               alpha_parameters,
               seed,
               bandit,

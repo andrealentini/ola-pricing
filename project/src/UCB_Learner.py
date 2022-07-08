@@ -15,6 +15,9 @@ class UCB_Learner(Learner):
         for i in range(self.n_items):
             idx[i] = np.argmax((self.means[i, :]+self.widths[i, :])*self.prices[i, :])
         return idx
+    
+    def reset(self):
+        self.__init__(self.prices)
 
     def update(self, pulled_arms, rewards): #pulled arms è un vettore di dim 5, rewards ha dim 5x(volte che pesco i rewards in una giornata)
         

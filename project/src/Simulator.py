@@ -7,10 +7,11 @@ from parameters_generation_utils import alpha_generation
 
 class Simulator:
 
-    def __init__(self, days, users, alpha_parameters, seed, bandit,
+    def __init__(self, days, users, n_simulations, alpha_parameters, seed, bandit,
                  prices, prob_matrix, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr, opt):
         self.days = days
         self.users = users #should be different every day? "Every day, there is a random number of potential new customers"
+        self.n_simulations = n_simulations
         self.alpha_parameters = alpha_parameters #3x6 (3 class of users -> 3 sets of alpha)
         self.prices = prices
         self.e = Environment(prices, prob_matrix, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr)
@@ -20,92 +21,112 @@ class Simulator:
         self.opt = opt
         self.opts = []
         self.rewards = []
+        self.R = []
 
 
     def run_simulation(self, debug):
 
         rewards_per_day = [[] for i in range(self.n_items)]
 
-        for day in range(0, self.days):
+        for simulation in range(0, self.n_simulations):
+            
+            #Reset the bandit at each new simulation
+            self.bandit.reset()
 
-            alphas = alpha_generation(self.alpha_parameters, seed=self.seed)
+            for day in range(0, self.days):
 
-            today_prices = self.bandit.pull_prices()
+                alphas = alpha_generation(self.alpha_parameters, seed=self.seed)
 
-            observed_rewards = [[] for i in range(self.n_items)]
+                today_prices = self.bandit.pull_prices()
 
-            for user in range(0, self.users):
-                #retrieve the user features -> user class
-                feature_1 = np.random.choice([0,1],p=[1-self.e.feature_1_dist, self.e.feature_1_dist])
-                feature_2 = np.random.choice([0,1],p=[1-self.e.feature_2_dist, self.e.feature_2_dist])
-                user_class = self.e.user_class_mapping(feature_1, feature_2)
-                if debug: print('user class: ',user_class)
+                observed_rewards = [[] for i in range(self.n_items)]
 
-                #starting item, -1 means that the user lands on the webpage of a competitor
-                items = np.concatenate((np.array([-1]), self.e.items), axis=0)
-                starting_point = np.random.choice(items, p = alphas[user_class])
+                for user in range(0, self.users):
+                    #retrieve the user features -> user class
+                    feature_1 = np.random.choice([0,1],p=[1-self.e.feature_1_dist, self.e.feature_1_dist])
+                    feature_2 = np.random.choice([0,1],p=[1-self.e.feature_2_dist, self.e.feature_2_dist])
+                    user_class = self.e.user_class_mapping(feature_1, feature_2)
+                    if debug: print('user class: ',user_class)
 
-                #to save bought_items that we cannot visit in the future
-                bought_items = np.zeros(self.n_items)
+                    #starting item, -1 means that the user lands on the webpage of a competitor
+                    items = np.concatenate((np.array([-1]), self.e.items), axis=0)
+                    starting_point = np.random.choice(items, p = alphas[user_class])
 
-                #if the user didn't land on a competitor webpage
-                if starting_point != -1:
+                    #to save bought_items that we cannot visit in the future
+                    bought_items = np.zeros(self.n_items)
 
-                    primary = starting_point
-                    if debug: print('starting point', primary)
+                    #if the user didn't land on a competitor webpage
+                    if starting_point != -1:
 
-                    #models the multiple paths of a user
-                    items_to_visit = []
+                        primary = starting_point
+                        if debug: print('starting point', primary)
 
-                    #exit condition: primary==1
-                    while primary != -1:
-                        purchase_outcome = self.e.purchase(primary, today_prices[primary], user_class)
-                        if purchase_outcome:
-                            if debug: print(str(primary) + ' purchased')
+                        #models the multiple paths of a user
+                        items_to_visit = []
 
-                            observed_rewards[primary].append(purchase_outcome)
+                        #exit condition: primary==1
+                        while primary != -1:
+                            purchase_outcome = self.e.purchase(primary, today_prices[primary], user_class)
+                            if purchase_outcome:
+                                if debug: print(str(primary) + ' purchased')
 
-                            n_items_sold = self.e.get_items_sold(primary, user_class)
+                                observed_rewards[primary].append(purchase_outcome)
 
-                            self.rewards.append(self.prices[primary][today_prices[primary]] * purchase_outcome * n_items_sold)
-                            self.opts.append(self.opt[user_class][primary])
+                                n_items_sold = self.e.get_items_sold(primary, user_class)
 
-                            if debug: print('items sold',n_items_sold)
+                                self.rewards.append(self.prices[primary][today_prices[primary]] * purchase_outcome * n_items_sold)
+                                self.opts.append(self.opt[user_class][primary])
 
-                            bought_items[primary] = 1
+                                if debug: print('items sold',n_items_sold)
 
-                            #salvarsi dati per bandit del pricing
+                                bought_items[primary] = 1
 
-                            clicked_secondary = self.e.get_clicked_secondary(user_class, bought_items, primary)
-                            if debug: print('clicked secondary',clicked_secondary)
-                            items_to_visit = items_to_visit + clicked_secondary
-                        else:
-                            observed_rewards[primary].append(0)
-                            self.rewards.append(0)
-                            self.opts.append(self.opt[user_class][primary])
+                                #salvarsi dati per bandit del pricing
 
-                        if len(items_to_visit) != 0:
-                            # random.shuffle(items_to_visit) necessary?
-                            primary = items_to_visit.pop()
-                        else:
-                            primary = -1
+                                clicked_secondary = self.e.get_clicked_secondary(user_class, bought_items, primary)
+                                if debug: print('clicked secondary',clicked_secondary)
+                                items_to_visit = items_to_visit + clicked_secondary
+                            else:
+                                observed_rewards[primary].append(0)
+                                self.rewards.append(0)
+                                self.opts.append(self.opt[user_class][primary])
 
-            self.bandit.update(today_prices, observed_rewards)
+                            if len(items_to_visit) != 0:
+                                # random.shuffle(items_to_visit) necessary?
+                                primary = items_to_visit.pop()
+                            else:
+                                primary = -1
 
-        #Days ended
-        for item in range(0, self.n_items):
-            rewards_per_day[item].append(self.bandit.collected_rewards_per_item[item])
+                self.bandit.update(today_prices, observed_rewards)
+
+            #Days ended
+            for item in range(0, self.n_items):
+                rewards_per_day[item].append(self.bandit.collected_rewards_per_item[item])
+            #Collect regrets of the simulation and reset auxiliary lists self.rewards and self.opts
+            instant_regrets = []
+            for i in range(len(self.rewards)):
+                instant_regrets.append(self.opts[i] - self.rewards[i])
+            cumulative_regret = np.cumsum(instant_regrets)
+            self.R.append(cumulative_regret)
+            self.rewards = []
+            self.opts = []
+
     
     def plot_cumulative_regret(self):
-        instant_regrets = []
-
-        for i in range(len(self.rewards)):
-            instant_regrets.append(self.opts[i] - self.rewards[i])
         
-        # todo: ho considerato tutti i days come un unico episodio, non sono sicuro
-        cumulative_regret = np.cumsum(instant_regrets)
+        #Plot the mean regret within its standard deviation
+        # In order to compute the mean we impose same length over all the regrets of different simulations (each simulation can have different interactions depending on users interaction)
+        min_len = min(len(i) for i in self.R)
+        for i, sublist in enumerate(self.R):
+            to_cut = len(sublist) - min_len
+            if to_cut>0:
+                self.R[i] = sublist[:-to_cut]
+        
+        mean_R = np.mean(self.R, axis=0)
+        std_R = np.std(self.R, axis=0)/np.sqrt(self.n_simulations)
 
-        plt.plot(cumulative_regret)
+        plt.plot(mean_R)
+        plt.fill_between(range(mean_R.shape[0]), mean_R-std_R, mean_R+std_R, alpha=0.4)
         plt.show()
 
 

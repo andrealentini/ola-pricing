@@ -1,21 +1,25 @@
 import random
 
 import numpy as np
+import matplotlib.pyplot as plt
 from Environment import Environment
 from parameters_generation_utils import alpha_generation
 
 class Simulator:
 
     def __init__(self, days, users, alpha_parameters, seed, bandit,
-                 prices, prob_matrix, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr):
+                 prices, prob_matrix, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr, opt):
         self.days = days
         self.users = users #should be different every day? "Every day, there is a random number of potential new customers"
         self.alpha_parameters = alpha_parameters #3x6 (3 class of users -> 3 sets of alpha)
+        self.prices = prices
         self.e = Environment(prices, prob_matrix, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr)
         self.seed = seed
         self.bandit = bandit
         self.n_items = self.e.prices.shape[0]
-
+        self.opt = opt
+        self.opts = []
+        self.rewards = []
 
 
     def run_simulation(self, debug):
@@ -27,7 +31,6 @@ class Simulator:
             alphas = alpha_generation(self.alpha_parameters, seed=self.seed)
 
             today_prices = self.bandit.pull_prices()
-            print(today_prices)
 
             observed_rewards = [[] for i in range(self.n_items)]
 
@@ -56,12 +59,17 @@ class Simulator:
 
                     #exit condition: primary==1
                     while primary != -1:
-                        if self.e.purchase(primary, today_prices[primary], user_class):
+                        purchase_outcome = self.e.purchase(primary, today_prices[primary], user_class)
+                        if purchase_outcome:
                             if debug: print(str(primary) + ' purchased')
 
-                            observed_rewards[primary].append(1)
+                            observed_rewards[primary].append(purchase_outcome)
 
                             n_items_sold = self.e.get_items_sold(primary, user_class)
+
+                            self.rewards.append(self.prices[primary][today_prices[primary]] * purchase_outcome * n_items_sold)
+                            self.opts.append(self.opt[user_class][primary])
+
                             if debug: print('items sold',n_items_sold)
 
                             bought_items[primary] = 1
@@ -73,6 +81,8 @@ class Simulator:
                             items_to_visit = items_to_visit + clicked_secondary
                         else:
                             observed_rewards[primary].append(0)
+                            self.rewards.append(0)
+                            self.opts.append(self.opt[user_class][primary])
 
                         if len(items_to_visit) != 0:
                             # random.shuffle(items_to_visit) necessary?
@@ -85,6 +95,18 @@ class Simulator:
         #Days ended
         for item in range(0, self.n_items):
             rewards_per_day[item].append(self.bandit.collected_rewards_per_item[item])
+    
+    def plot_cumulative_regret(self):
+        instant_regrets = []
+
+        for i in range(len(self.rewards)):
+            instant_regrets.append(self.opts[i] - self.rewards[i])
+        
+        # todo: ho considerato tutti i days come un unico episodio, non sono sicuro
+        cumulative_regret = np.cumsum(instant_regrets)
+
+        plt.plot(cumulative_regret)
+        plt.show()
 
 
 

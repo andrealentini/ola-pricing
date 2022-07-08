@@ -76,8 +76,15 @@ np.random.seed(None)
 
 bandit = UCB_Learner(prices)
 
-days = 100
-users = 100
+days = 10
+users = 1000
+
+opt = np.zeros((3,5))
+
+for user_class in range(0, conversion_rates.shape[0]):
+    for item in range(0, prices.shape[0]):
+        opt[user_class][item] = np.max([price * conv for price, conv in zip(prices[item], conversion_rates[user_class][item])])
+        opt[user_class][item] = opt[user_class][item] * n_items_to_buy_distr[user_class][item][0]
 
 #test simulation
 S = Simulator(days,
@@ -91,9 +98,11 @@ S = Simulator(days,
               feature_2_dist,
               conversion_rates,
               primary_to_secondary_mapping,
-              n_items_to_buy_distr)
+              n_items_to_buy_distr,
+              opt)
 
-#S.run_simulation(debug=False)
+S.run_simulation(debug=False)
+S.plot_cumulative_regret()
 
 '''
 #test MonteCarlo algorithm
@@ -101,12 +110,4 @@ estimator = MC_sampling(prob_matrix[2])
 activation_probs = estimator.estimate_activ_prob(9000)
 print('Activation probabilities: ',activation_probs)
 '''
-opt = np.zeros((3,5))
-
-for user_class in range(0, conversion_rates.shape[0]):
-    for item in range(0, prices.shape[0]):
-        opt[user_class][item] = np.max([price * conv for price, conv in zip(prices[item], conversion_rates[user_class][item])])
-        opt[user_class][item] = opt[user_class][item] * n_items_to_buy_distr[user_class][item][0]
-
-print(opt)
 

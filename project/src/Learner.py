@@ -34,7 +34,9 @@ class Learner:
         #Here i add the reward of for each arm pulled in the related item (i scorre gli item)
         for i in range(self.n_items):
             self.rewards_per_item_arm[i][pulled_arms[i]] = self.rewards_per_item_arm[i][pulled_arms[i]] + rewards[i]
+            # self.rewards_per_item_arm[i][pulled_arms[i]].append(rewards[i])
 
         #Here i add the rewards obtained from each item
         for i in range(self.n_items):
             self.collected_rewards_per_item[i] = self.collected_rewards_per_item[i] + rewards[i]
+            # self.collected_rewards_per_item[i].append(rewards[i])

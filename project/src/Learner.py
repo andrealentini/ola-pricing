@@ -23,7 +23,7 @@ class Learner:
         #The total collected rewards for each item, therefore it will be a list of 5 lists(5 items)
         self.collected_rewards_per_item = [[] for _ in range(self.n_items)]
     
-    def reset():
+    def reset(self):
         pass
 
 

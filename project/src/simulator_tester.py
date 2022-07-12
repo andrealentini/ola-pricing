@@ -3,13 +3,14 @@ from Simulator import Simulator
 from MonteCarlo_sampling import  MC_sampling
 from parameters_generation_utils import alpha_generation, prob_matrix_generation
 from UCB_Learner import UCB_Learner
+from GreedyLearner import Greedy_Learner
 
 #PARAMETER INITIALIZATION
 
 seed = 15
 np.random.seed(seed)
 
-prices = np.array([[1, 3, 50, 7],
+prices = np.array([[1, 3, 5, 7],
                    [1, 3, 5, 7],
                    [1, 3, 5, 7],
                    [1, 3, 5, 7],
@@ -74,7 +75,7 @@ print('Probability matrix: \n', prob_matrix)
 
 np.random.seed(None)
 
-bandit = UCB_Learner(prices)
+bandit = Greedy_Learner(prices, conversion_rates[0], n_items_to_buy_distr[0])
 
 days = 10
 users = 1000
@@ -112,4 +113,3 @@ estimator = MC_sampling(prob_matrix[2])
 activation_probs = estimator.estimate_activ_prob(9000)
 print('Activation probabilities: ',activation_probs)
 '''
-

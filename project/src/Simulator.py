@@ -39,7 +39,6 @@ class Simulator:
             self.bandit.reset()
 
             for day in range(0, self.days):
-                print(day)
 
                 alphas = alpha_generation(self.alpha_parameters, seed=self.seed)
 

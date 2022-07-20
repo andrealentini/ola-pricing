@@ -5,6 +5,7 @@ from Simulator import Simulator
 from MonteCarlo_sampling import  MC_sampling
 from parameters_generation_utils import alpha_generation, prob_matrix_generation, MC_num_iterations
 from UCB_Learner import UCB_Learner
+from TS_Learner import TS_Learner
 
 #PARAMETER INITIALIZATION
 
@@ -76,7 +77,7 @@ print('Probability matrix: \n', prob_matrix)
 
 np.random.seed(None)
 
-bandit = UCB_Learner(prices)
+bandit = TS_Learner(prices)
 
 days = 10
 users = 500

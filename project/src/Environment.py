@@ -40,16 +40,16 @@ class Environment:
         clicked_secondary = []
         for secondary in self.primary_to_secondary_mapping[primary]:
             if bought_items[secondary] == 0:
-                click_outcome = np.random.binomial(1, secondary_prob[secondary])
+                click_outcome = np.random.choice([0, 1], p=[1-secondary_prob[secondary], secondary_prob[secondary]])
                 if click_outcome == 1:
                     clicked_secondary.append(secondary)
         return clicked_secondary
 
 
     def get_items_sold(self, item, user_class):
-        mu, sigma = self.n_items_to_buy_distr[user_class, item] #todo è sigma al quadrato???
+        mu, sigma = self.n_items_to_buy_distr[user_class, item]
         items_sold = int(np.round(np.random.normal(mu, sigma, 1)))
-        if items_sold == 0.0:
+        if items_sold <= 0.0:
             items_sold = 1
         return items_sold
 

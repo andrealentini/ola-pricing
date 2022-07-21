@@ -6,6 +6,7 @@ from MonteCarlo_sampling import  MC_sampling
 from parameters_generation_utils import alpha_generation, prob_matrix_generation, MC_num_iterations
 from UCB_Learner import UCB_Learner
 from TS_Learner import TS_Learner
+from Number_of_sold_items_estimator import Number_of_sold_items_estimator
 
 #PARAMETER INITIALIZATION
 
@@ -77,18 +78,14 @@ print('Probability matrix: \n', prob_matrix)
 
 np.random.seed(None)
 
-bandit = TS_Learner(prices)
+bandit = UCB_Learner(prices)
+items_sold_estimator = Number_of_sold_items_estimator(5, 3)
 
-days = 10
-users = 500
+days = 30
+users = 50
 n_simulations = 10
 
 opt_per_starting_point = np.zeros((3,5))
-
-"""for user_class in range(0, conversion_rates.shape[0]):
-    for item in range(0, prices.shape[0]):
-        opt[user_class][item] = np.max([price * conv for price, conv in zip(prices[item], conversion_rates[user_class][item])])
-        opt[user_class][item] = opt[user_class][item] * n_items_to_buy_distr[user_class][item][0]"""
 
 #Estimate activation probabilities with MonteCarlo sampling for each user class
 activation_probs = []
@@ -122,6 +119,8 @@ S = Simulator(days,
               alpha_parameters,
               seed,
               bandit,
+              False, #True if the number of sold items is uncertain
+              items_sold_estimator,
               prices,
               prob_matrix,
               feature_1_dist,
@@ -141,4 +140,5 @@ estimator = MC_sampling(prob_matrix[2])
 activation_probs = estimator.estimate_activ_prob(9000)
 print('Activation probabilities: ',activation_probs)
 '''
+
 

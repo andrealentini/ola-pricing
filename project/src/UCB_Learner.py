@@ -40,6 +40,7 @@ class UCB_Learner(Learner):
                 for item, arm in enumerate(comb):
                     cur_sum += self.prices[item][arm] * (self.means[item, arm]+self.widths[item, arm]) * np.mean(n_items_to_buy_distr[:, item, 0], axis=0) * np.mean(np.array(activation_probs)[:,starting_point, item], axis=0)
                 combinations_rewards.append(cur_sum)
+        combinations = combinations * self.prices.shape[0]
         pulled_arms_idx = combinations[np.argmax(combinations_rewards)]
         self.previous_arms = pulled_arms_idx
         print('Pulled arms: ', pulled_arms_idx)

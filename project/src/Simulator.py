@@ -112,6 +112,7 @@ class Simulator:
                                 primary = items_to_visit.pop()
                             else:
                                 primary = -1
+                        #bandit_rewards[starting_point].append(user_rewards)
                         self.rewards.append(user_rewards)
                         self.opts.append(self.opt_per_starting_point[user_class][starting_point])
                     else:

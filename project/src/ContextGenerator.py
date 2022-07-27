@@ -4,9 +4,9 @@ import numpy as np
 class ContextGenerator:
 
     # the context generator is created when we already have some past observations
-    def __init__(self, rewards, feature_tuples):
-        self.rewards = rewards
-        self.feature_tuples = feature_tuples
+    def __init__(self):
+        self.rewards = []
+        self.feature_tuples = []
         self.features = [0,1] #vogliamo inizializzarla in modo più estendibile?
         #nel simulator le ho chiamate feature1 e feature2, forse è meglio chiamarle feature0 e feature1
     
@@ -124,10 +124,11 @@ class Node:
         self.split_feature = split_feature
         self.father_features = father_features #already decided features, -1 if not like (0,-1)
 
-
+'''
 rewards = np.array([12, 5, 20, 5, 5, 0, 0, 5, 5, 0])
 feature_tuples = np.array([(1,1), (1,0), (1,0), (1,1), (1,0), (1,1), (0,1), (0,0), (1,0), (0,0)])
 C = ContextGenerator(rewards, feature_tuples)
 classes = []
 C.split_feature_space(classes)
 print(classes)
+'''

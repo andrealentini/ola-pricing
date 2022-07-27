@@ -3,7 +3,7 @@ import numpy as np
 
 class Learner:
 
-    def __init__(self, prices):
+    def __init__(self, prices, bandit_split=None):
         
         #di solito si usa nell'aggiornamento delle witdh; qui, siccome pulliamo 5 arm e poi pesco i reward di tali arm più volte in una giornata, 
         #potremmo aggiornare t ogni volta che pesco i reward invece che ogni volta che pullo i nuovi arm (cioè a fine giornata)
@@ -11,6 +11,9 @@ class Learner:
 
         self.n_items = prices.shape[0]
         self.n_prices = prices.shape[1]
+
+        # when context is used, this attribute represent the split handled by the bandit
+        self.bandit_split = bandit_split
 
         #we have 20 arms, therefore 20 lists to keep track of the reward of a certain arm of a certain item
         #Therefore we will have a list of 5 lists representing each one an item
@@ -40,3 +43,6 @@ class Learner:
         for i in range(self.n_items):
             self.collected_rewards_per_item[i] = self.collected_rewards_per_item[i] + rewards[i]
             # self.collected_rewards_per_item[i].append(rewards[i])
+    
+    def get_bandit_split(self):
+        return self.bandit_split

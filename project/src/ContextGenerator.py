@@ -12,8 +12,12 @@ class ContextGenerator:
     
     # every 2 weeks this method is called and observations are updated
     def update_observations(self, new_rewards, new_feature_tuples):
-        self.rewards += new_rewards
-        new_feature_tuples += new_feature_tuples
+        if len(self.rewards) == 0:
+            self.rewards = new_rewards
+            self.feature_tuples = new_feature_tuples
+        else:
+            self.rewards = np.concatenate((self.rewards, new_rewards))
+            self.feature_tuples = np.concatenate((self.feature_tuples, new_feature_tuples))
 
 
     def get_split(self, root, classes):
@@ -127,7 +131,8 @@ class Node:
 '''
 rewards = np.array([12, 5, 20, 5, 5, 0, 0, 5, 5, 0])
 feature_tuples = np.array([(1,1), (1,0), (1,0), (1,1), (1,0), (1,1), (0,1), (0,0), (1,0), (0,0)])
-C = ContextGenerator(rewards, feature_tuples)
+C = ContextGenerator()
+C.update_observations(rewards, feature_tuples)
 classes = []
 C.split_feature_space(classes)
 print(classes)

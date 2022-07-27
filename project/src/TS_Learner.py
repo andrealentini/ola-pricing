@@ -4,8 +4,8 @@ import numpy as np
 
 class TS_Learner(Learner):
 
-    def __init__(self, prices):
-        super().__init__(prices)
+    def __init__(self, prices, bandit_split=None):
+        super().__init__(prices, bandit_split)
         self.prices = prices
         self.beta_parameteres = np.ones((2, self.n_items, self.n_prices)) #matrice 5x4x2
         self.previous_arms = [0] * prices.shape[0]

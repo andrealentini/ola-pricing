@@ -3,8 +3,8 @@ from Learner import *
 import itertools
 
 class UCB_Learner(Learner):
-    def __init__(self, prices):
-        super().__init__(prices)
+    def __init__(self, prices, bandit_split=None):
+        super().__init__(prices, bandit_split)
         self.prices = prices
         self.means = np.zeros(prices.shape)
         self.widths = np.ones(prices.shape) * np.inf

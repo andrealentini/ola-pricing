@@ -65,7 +65,7 @@ class TS_Learner(Learner):
         return pulled_arms_idx
 
     def reset(self):
-        self.__init__(self.prices)
+        self.__init__(self.prices, self.bandit_split)
 
     def update(self, pulled_arms, rewards):
         #self.t += 1

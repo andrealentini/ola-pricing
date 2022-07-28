@@ -52,7 +52,7 @@ class Simulator:
             # when we use context information, we have a set of bandits
             if self.use_context:
                 self.context_bandits = []
-                self.context_bandits.append(self.bandit)
+                self.context_bandits.append(self.create_context_bandit(np.array([-1, -1])))
             
             #Reset the bandit at each new simulation
             if not self.use_context:
@@ -103,7 +103,7 @@ class Simulator:
                             split_daily_bandit_rewards = [[] for i in range(self.n_items)]
                             for item in range(self.n_items):
                                 daily_mask = []
-                                for i  in range(split_bandit_rewards[item]):
+                                for i  in range(len(split_bandit_rewards[item])):
                                     daily_mask.append(prices == split_pulled_prices[item])
                                 split_daily_bandit_rewards[item] = list(compress(split_bandit_rewards[item], daily_mask))
                             bandit.update(prices, split_daily_bandit_rewards)

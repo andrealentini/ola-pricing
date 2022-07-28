@@ -81,7 +81,7 @@ np.random.seed(None)
 bandit = UCB_Learner(prices)
 items_sold_estimator = Number_of_sold_items_estimator(5, 3)
 
-days = 30
+days = 35
 users = 50
 n_simulations = 10
 
@@ -121,7 +121,7 @@ S = Simulator(days,
               bandit,
               False, #True if the number of sold items is uncertain
               items_sold_estimator,
-              False, #True if context has to be used
+              True, #True if context has to be used
               prices,
               prob_matrix,
               feature_1_dist,

@@ -48,7 +48,7 @@ class UCB_Learner(Learner):
 
     
     def reset(self):
-        self.__init__(self.prices)
+        self.__init__(self.prices, self.bandit_split)
 
     def update(self, pulled_arms, rewards): #pulled arms è un vettore di dim 5, rewards ha dim 5x(volte che pesco i rewards in una giornata)
         

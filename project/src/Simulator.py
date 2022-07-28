@@ -37,6 +37,7 @@ class Simulator:
         self.all_rew_feat_pulledprices = []
         for i in range(3):
             self.all_rew_feat_pulledprices.append([[] for i in range(self.n_items)])
+        self.max_history_memory = 10000
         self.bandit_type = type(self.bandit).__name__
         self.context_bandits = []
         self.context_generator = ContextGenerator()
@@ -104,7 +105,7 @@ class Simulator:
                             for item in range(self.n_items):
                                 daily_mask = []
                                 for i  in range(len(split_bandit_rewards[item])):
-                                    daily_mask.append(prices == split_pulled_prices[item])
+                                    daily_mask.append(prices == split_pulled_prices[item][i])
                                 split_daily_bandit_rewards[item] = list(compress(split_bandit_rewards[item], daily_mask))
                             bandit.update(prices, split_daily_bandit_rewards)
 
@@ -171,6 +172,14 @@ class Simulator:
                                 if debug: print(str(primary) + ' purchased')
 
                                 bandit_rewards[primary].append(purchase_outcome)
+                                if self.use_context:
+                                    if len(self.all_rew_feat_pulledprices[0][primary]) >= self.max_history_memory:
+                                        del self.all_rew_feat_pulledprices[0][primary][0]
+                                        del self.all_rew_feat_pulledprices[1][primary][0]
+                                        del self.all_rew_feat_pulledprices[2][primary][0]
+                                    self.all_rew_feat_pulledprices[0][primary].append(purchase_outcome)
+                                    self.all_rew_feat_pulledprices[1][primary].append((feature_1, feature_2))
+                                    self.all_rew_feat_pulledprices[2][primary].append(today_prices)
 
                                 n_items_sold = self.e.get_items_sold(primary, user_class)
 
@@ -192,6 +201,14 @@ class Simulator:
                                 items_to_visit = items_to_visit + clicked_secondary
                             else:
                                 bandit_rewards[primary].append(0)
+                                if self.use_context:
+                                    if len(self.all_rew_feat_pulledprices[0][primary]) >= self.max_history_memory:
+                                        del self.all_rew_feat_pulledprices[0][primary][0]
+                                        del self.all_rew_feat_pulledprices[1][primary][0]
+                                        del self.all_rew_feat_pulledprices[2][primary][0]
+                                    self.all_rew_feat_pulledprices[0][primary].append(0)
+                                    self.all_rew_feat_pulledprices[1][primary].append((feature_1, feature_2))
+                                    self.all_rew_feat_pulledprices[2][primary].append(today_prices)
                                 #self.rewards.append(0)
                                 #self.opts.append(self.opt[user_class][primary])
 
@@ -207,9 +224,6 @@ class Simulator:
                         if self.use_context:
                             self.context_rewards.append(user_rewards)
                             self.context_feature_tuples.append((feature_1, feature_2))
-                            self.all_rew_feat_pulledprices[0][primary].append(user_rewards)
-                            self.all_rew_feat_pulledprices[1][primary].append((feature_1, feature_2))
-                            self.all_rew_feat_pulledprices[2][primary].append(today_prices)
                     else:
                         self.rewards.append(0)
                         self.opts.append(0)
@@ -217,9 +231,6 @@ class Simulator:
                         if self.use_context:
                             self.context_rewards.append(0)
                             self.context_feature_tuples.append((feature_1, feature_2))
-                            self.all_rew_feat_pulledprices[0][primary].append(0)
-                            self.all_rew_feat_pulledprices[1][primary].append((feature_1, feature_2))
-                            self.all_rew_feat_pulledprices[2][primary].append(today_prices)
                 
                 # At the end of the single day, update bandits
                 if not self.use_context:

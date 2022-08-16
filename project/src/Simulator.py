@@ -50,6 +50,8 @@ class Simulator:
 
         for simulation in range(0, self.n_simulations):
 
+            self.context_generator = ContextGenerator()
+
             # when we use context information, we have a set of bandits
             if self.use_context:
                 self.context_bandits = []
@@ -64,20 +66,19 @@ class Simulator:
             
 
             for day in range(0, self.days):
-                print(day)
+                #print(day)
 
                 alphas = alpha_generation(self.alpha_parameters, seed=self.seed)
 
                 # when context info is used, every 2 weeks we create new bandits for each feature split
                 if self.use_context and day%14 == 0 and day!=0:
                     self.context_bandits = []
-                    splits = []
                     #update the context generator algorithm
                     self.context_generator.update_observations(np.array(self.context_rewards), np.array(self.context_feature_tuples))
                     self.context_rewards = []
                     self.context_feature_tuples = []
                     #split the feature space with the updated informations
-                    self.context_generator.split_feature_space(splits)
+                    splits = self.context_generator.split_feature_space()
                     #create a bandit for each split
                     for split in splits:
                         self.context_bandits.append(self.create_context_bandit(split))

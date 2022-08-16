@@ -43,7 +43,7 @@ class UCB_Learner(Learner):
         combinations = combinations * self.prices.shape[0]
         pulled_arms_idx = combinations[np.argmax(combinations_rewards)]
         self.previous_arms = pulled_arms_idx
-        print('Pulled arms: ', pulled_arms_idx)
+        #print('Pulled arms: ', pulled_arms_idx)
         return pulled_arms_idx
 
     

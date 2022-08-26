@@ -77,40 +77,25 @@ class ContextGenerator:
     # Slides notation - p_c2 = probability that context with 'feature'=1 occurs
     # c1 = context with feature = 0 / c2 = context with feature = 1
     def evaluate_split(self, split):
-        #print()
-        #print(split)
-
-        p_c2 = self.compute_context_probability(split[1])
-        p_c1 = 1 - p_c2
-        lower_bound_c1_prob = p_c1 - np.sqrt(-((np.log(0.90)) / (2 * self.feature_tuples.shape[0])))
-        lower_bound_c2_prob = p_c2 - np.sqrt(-((np.log(0.90)) / (2 * self.feature_tuples.shape[0])))
-        #print("p_c2", p_c2)
-        #print("lower_bound_c2_prob", lower_bound_c2_prob)
-        #print("p_c1", p_c1)
-        #print("lower_bound_c1_prob", lower_bound_c1_prob)
-
 
         rewards_c2 = self.extract_rewards(split[1])
         rewards_c1 = self.extract_rewards(split[0])
-
-        lower_bound_c2_rewards = np.mean(rewards_c2) - 0.90 * np.sqrt(np.var(rewards_c2, ddof=0) / len(rewards_c2))
-        lower_bound_c1_rewards = np.mean(rewards_c1) - 0.90 * np.sqrt(np.var(rewards_c1, ddof=0) / len(rewards_c1))
-        #print('rewards_c2', rewards_c2)
-        #print('lower_bound_c2_rewards', lower_bound_c2_rewards)
-        #print('rewards_c1', rewards_c1)
-        #print('lower_bound_c1_rewards', lower_bound_c1_rewards)
-
         rewards_c0 = self.extract_rewards(split[2])
-        lower_bound_c0_rewards = np.mean(rewards_c0) - 0.90 * np.sqrt(np.var(rewards_c0) / len(rewards_c0))
-        #print('rewards_c0', rewards_c0)
-        print('lower_bound_c0_rewards', lower_bound_c0_rewards)
 
-        split_value = lower_bound_c1_prob * lower_bound_c1_rewards + lower_bound_c2_prob * lower_bound_c2_rewards
-        print('split_value', split_value)
-        #print('lower_bound_c2_prob * lower_bound_c2_rewards', lower_bound_c2_prob * lower_bound_c2_rewards)
-        #print('lower_bound_c1_prob * lower_bound_c1_rewards', lower_bound_c1_prob * lower_bound_c1_rewards)
+        p_c2 = self.compute_context_probability(split[1])
+        p_c1 = 1 - p_c2
+
+        lower_bound_c2_rewards = np.mean(rewards_c2) - np.sqrt(-((np.log(0.90)) / (2 * len(rewards_c0))))
+        lower_bound_c1_rewards = np.mean(rewards_c1) - np.sqrt(-((np.log(0.90)) / (2 * len(rewards_c0))))
+
+
+        lower_bound_c0_rewards = np.mean(rewards_c0) - np.sqrt(-((np.log(0.90)) / (2 * len(rewards_c0))))
+
+        #split_value = lower_bound_c1_prob * lower_bound_c1_rewards + lower_bound_c2_prob * lower_bound_c2_rewards
+        split_value = p_c1 * lower_bound_c1_rewards + p_c2 * lower_bound_c2_rewards
 
         if split_value > lower_bound_c0_rewards:
+            #print("SPLIT DONE")
             return split_value
         else:
             return 0
@@ -137,12 +122,3 @@ class ContextGenerator:
             if comparison_ok:
                 positive_realizations += 1
         return positive_realizations/total_realizations
-
-'''
-rewards = np.array([12, 5, 20, 5, 5, 0, 0, 0.01, 5, 0])
-feature_tuples = np.array([(1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (0,1), (0,0), (1,0), (0,0)])
-C = ContextGenerator()
-C.update_observations(rewards, feature_tuples)
-split = C.split_feature_space()
-print(split)
-'''

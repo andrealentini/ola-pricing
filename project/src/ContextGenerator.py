@@ -92,6 +92,7 @@ class ContextGenerator:
         lower_bound_c0_rewards = np.mean(rewards_c0) - np.sqrt(-((np.log(0.90)) / (2 * len(rewards_c0))))
 
         #split_value = lower_bound_c1_prob * lower_bound_c1_rewards + lower_bound_c2_prob * lower_bound_c2_rewards
+        #evaluate the split value
         split_value = p_c1 * lower_bound_c1_rewards + p_c2 * lower_bound_c2_rewards
 
         if split_value > lower_bound_c0_rewards:

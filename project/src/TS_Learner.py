@@ -1,9 +1,12 @@
 from Learner import *
 import numpy as np
+import itertools
 
-
+# Implementation of the specific Multi Armed Bandit algorithm TS (Thompson Sampling), derived from general Learner class 
 class TS_Learner(Learner):
 
+    # TS keeps track of the parameters of a Beta distribution that models the expected rewards (initialized as zeros)
+    # previous_arms : arms selected at the previous call of the bandit are used to make an estimation of the new best arms to pick and speed up the pull of new candidate prices
     def __init__(self, prices, bandit_split=None):
         super().__init__(prices, bandit_split)
         self.prices = prices
@@ -37,20 +40,26 @@ class TS_Learner(Learner):
 
         return idx
 
-    def pull_prices_activations(self, n_items_to_buy_distr, activation_probs):
-        '''
-        idx = np.zeros(self.n_items, dtype=int)
-        possible_arms_indeces = np.arange(self.prices.shape[1])
+    # Method that pulls new candidate arms before the collection of the rewards. Arms selected optimize the expected rewards estimated with best arms sampled from the Beta distribution,
+    # given the distribution of the number of items bought for each item and the activation probabilities
+    # estimated : when True it uses previous arms instead of all possible combinations to optimize the expected rewards of new pulled arms, with a notable speedup in computation
+    def pull_prices_activations(self, n_items_to_buy_distr, activation_probs, estimated=True):
+        
         combinations = []
-        for comb in itertools.product(possible_arms_indeces, repeat=len(possible_arms_indeces)+1):
-            combinations.append(comb)
-        '''
-        combinations = []
-        for item in range(self.prices.shape[0]):
-            for arm in range(self.prices.shape[1]):
-                combination = self.previous_arms.copy()
-                combination[item] = arm
-                combinations.append(combination)
+
+        if estimated==False:
+            idx = np.zeros(self.n_items, dtype=int)
+            possible_arms_indeces = np.arange(self.prices.shape[1])
+            combinations = []
+            for comb in itertools.product(possible_arms_indeces, repeat=len(possible_arms_indeces)+1):
+                combinations.append(comb)
+        else:
+            for item in range(self.prices.shape[0]):
+                for arm in range(self.prices.shape[1]):
+                    combination = self.previous_arms.copy()
+                    combination[item] = arm
+                    combinations.append(combination)
+
         combinations_rewards = []
         for starting_point in range(0, self.prices.shape[0]):
             for comb in combinations:
@@ -61,19 +70,20 @@ class TS_Learner(Learner):
         combinations = combinations * self.prices.shape[0]
         pulled_arms_idx = combinations[np.argmax(combinations_rewards)]
         self.previous_arms = pulled_arms_idx
-        print('Pulled arms: ', pulled_arms_idx)
+
         return pulled_arms_idx
 
+    # Reinitialize the bandit
     def reset(self):
         self.__init__(self.prices, self.bandit_split)
 
+    # This method extends the Learner update to also update Beta parameters for each sample of collected rewards
     def update(self, pulled_arms, rewards):
         #self.t += 1
 
         super().update(pulled_arms, rewards)
 
         for i in range(self.n_items):
-            #Non lo so quante colonne ha la matrice rewards in teoria, ma dato che sono più di una, devo iterare anche per j così sommo 1 uno alla volta i singoli rewards
             for j in range(len(rewards[i])): 
                 self.beta_parameteres[0, i, pulled_arms[i]] = self.beta_parameteres[0, i, pulled_arms[i]] + rewards[i][j]
                 self.beta_parameteres[1, i, pulled_arms[i]] = self.beta_parameteres[1, i, pulled_arms[i]] + 1.00 - rewards[i][j]

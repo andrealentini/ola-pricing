@@ -3,8 +3,8 @@ from Learner import *
 import itertools
 
 class UCB_Learner(Learner):
-    def __init__(self, prices):
-        super().__init__(prices)
+    def __init__(self, prices, bandit_split=None):
+        super().__init__(prices, bandit_split)
         self.prices = prices
         self.means = np.zeros(prices.shape)
         self.widths = np.ones(prices.shape) * np.inf
@@ -43,12 +43,12 @@ class UCB_Learner(Learner):
         combinations = combinations * self.prices.shape[0]
         pulled_arms_idx = combinations[np.argmax(combinations_rewards)]
         self.previous_arms = pulled_arms_idx
-        print('Pulled arms: ', pulled_arms_idx)
+        #print('Pulled arms: ', pulled_arms_idx)
         return pulled_arms_idx
 
     
     def reset(self):
-        self.__init__(self.prices)
+        self.__init__(self.prices, self.bandit_split)
 
     def update(self, pulled_arms, rewards): #pulled arms è un vettore di dim 5, rewards ha dim 5x(volte che pesco i rewards in una giornata)
         

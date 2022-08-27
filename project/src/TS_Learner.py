@@ -4,8 +4,8 @@ import numpy as np
 
 class TS_Learner(Learner):
 
-    def __init__(self, prices):
-        super().__init__(prices)
+    def __init__(self, prices, bandit_split=None):
+        super().__init__(prices, bandit_split)
         self.prices = prices
         self.beta_parameteres = np.ones((2, self.n_items, self.n_prices)) #matrice 5x4x2
         self.previous_arms = [0] * prices.shape[0]
@@ -65,7 +65,7 @@ class TS_Learner(Learner):
         return pulled_arms_idx
 
     def reset(self):
-        self.__init__(self.prices)
+        self.__init__(self.prices, self.bandit_split)
 
     def update(self, pulled_arms, rewards):
         #self.t += 1

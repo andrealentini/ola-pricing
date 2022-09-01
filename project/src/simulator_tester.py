@@ -8,17 +8,21 @@ from UCB_Learner import UCB_Learner
 from TS_Learner import TS_Learner
 from Number_of_sold_items_estimator import Number_of_sold_items_estimator
 
-#PARAMETER INITIALIZATION
+# Code use to launch the project that instantiate and initialize all the needed to make a run
+
+# ================== PROBLEM  MODELING ================== #
 
 seed = 15
 np.random.seed(seed)
 
+# Set the value of all candidate prices for each item(rows)
 prices = np.array([[1, 2, 3, 4],
                    [1, 2, 3, 4],
                    [1, 2, 3, 4],
                    [1, 2, 3, 4],
                    [1, 2, 3, 4]])
 
+# Set the matrix of conversion rates for each couple item-arm for all the three user classes
 conversion_rates = np.array([[[1, 1, 1, 1],
                               [1, 1, 1, 1],
                               [1, 1, 1, 1],
@@ -37,6 +41,7 @@ conversion_rates = np.array([[[1, 1, 1, 1],
                               [0.1, 0.09, 0.08, 0.07],
                               [0.1, 0.09, 0.08, 0.07]]])
 
+# Set the means and std of the number of items sold for each item for all the user classes
 n_items_to_buy_distr = np.array([[[19, 2],
                                   [19, 2],
                                   [19, 2],
@@ -55,52 +60,66 @@ n_items_to_buy_distr = np.array([[[19, 2],
                                   [2, 2],
                                   [1, 2]]])
 
-print(n_items_to_buy_distr[:][0][0])
+# Set the mapping of the two secondary items showed for each primary item
 primary_to_secondary_mapping = np.array([[1,2],
                                          [2,3],
                                          [3,4],
                                          [4,0],
                                          [0,1]])
 
+# Set the distribution of the user features
 feature_1_dist = 0.2
 feature_2_dist = 0.2
 
+# Set the lambda value (factor that reduce the probability to click on the second secondary item showed in the page of a primary item)
 lambda_param = 0.5
 
-#the first alpha is alpha_0
-#parameters for the dirichlet that samples the alphas
+# Set parameters for the dirichlet that samples the alphas (probabilities to land on the page of a primary item) for each user class, the first alpha is alpha_0
 alpha_parameters = [[2,2,3,4,5,6],
                     [2,2,3,4,5,6],
                     [2,2,3,4,5,6]]
 
+
+# ================== SIMULATION PARAMETER INITIALIZATION ================== #
+
+# Generates a consistent Item-Item influence graph given the primary_to_secondary_mapping and the lambda value 
 prob_matrix = prob_matrix_generation(primary_to_secondary_mapping, lambda_param)
 print('Probability matrix: \n', prob_matrix)
 
 np.random.seed(None)
 
+# Instantiate the bandit used to learn prices
 bandit = UCB_Learner(prices)
+# Instantiate the estimator of the number of items sold (Step 4)
 items_sold_estimator = Number_of_sold_items_estimator(5, 3)
 
+# Setting the number of days, users and simulations to be done in the experiment
 days = 30
 users = 50
 n_simulations = 10
 
+# ================== OPTIMUM COMPUTATION ================== #
+
 opt_per_starting_point = np.zeros((3,5))
 
-#Estimate activation probabilities with MonteCarlo sampling for each user class
+# Here there is the computation to obtain the optimum value needed to compute the empirical regret of our algorithms.
+# It is important to notice that the optimum is computed considering the Item-Item influence graph and the activation probabilities. In other words,
+# we consider the relationships between items to optimize the learners and so we must consider this aspect also in the computation of optimum points
+
+# Estimate activation probabilities with MonteCarlo sampling for each user class
 activation_probs = []
 for user_class in range(prob_matrix.shape[0]):
     estimator = MC_sampling(prob_matrix[user_class])
     activation_probs.append(estimator.estimate_activ_prob( MC_num_iterations(prob_matrix[user_class])))
-    print('Activation probabilities: ',activation_probs)
+print('Activation probabilities: ',activation_probs)
 
-#Create all possible combinationsto of price per item to be evaluated
+# Create all possible combinations of price per item to be evaluated in the optimum computation
 possible_arms_indeces = np.arange(prices.shape[1])
 combinations = []
 for comb in itertools.product(possible_arms_indeces, repeat=len(possible_arms_indeces)+1):
   combinations.append(comb)
 
-#compute opts per starting point
+# Compute opts per starting point (i.e. we will obtain the optimum expected reward obtainable starting from a starting point item and then moving from it following the activation probabilities)
 for user_class in range(0, conversion_rates.shape[0]):
     for starting_point in range(0, prices.shape[0]):
         combinations_rewards = []
@@ -112,7 +131,8 @@ for user_class in range(0, conversion_rates.shape[0]):
         opt_per_starting_point[user_class][starting_point] = np.max(combinations_rewards)
 print(opt_per_starting_point)
 
-#test simulation
+# ================== ALGORITHM SIMULATION ================== #
+
 S = Simulator(days,
               users,
               n_simulations,
@@ -134,12 +154,5 @@ S = Simulator(days,
 
 S.run_simulation(debug=False)
 S.plot_cumulative_regret()
-
-'''
-#test MonteCarlo algorithm
-estimator = MC_sampling(prob_matrix[2])
-activation_probs = estimator.estimate_activ_prob(9000)
-print('Activation probabilities: ',activation_probs)
-'''
 
 

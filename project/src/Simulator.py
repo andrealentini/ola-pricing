@@ -28,6 +28,8 @@ class Simulator:
         self.opts = []
         self.rewards = []
         self.R = []
+        self.RW = []
+        self.OPT = []
         self.items_sold_uncertain = items_sold_uncertain
         self.items_sold_estimator = items_sold_estimator
         #attribute for context handling
@@ -249,24 +251,42 @@ class Simulator:
                 instant_regrets.append(self.opts[i] - self.rewards[i])
             cumulative_regret = np.cumsum(instant_regrets)
             self.R.append(cumulative_regret)
+            self.RW.append(self.rewards)
+            self.OPT.append(self.opts)
             self.rewards = []
             self.opts = []
 
     def plot_cumulative_regret(self):
-        
-        #Plot the mean regret within its standard deviation
-        # In order to compute the mean we impose same length over all the regrets of different simulations (each simulation can have different interactions depending on users interaction)
-        #min_len = min(len(i) for i in self.R)
-        #for i, sublist in enumerate(self.R):
-            #to_cut = len(sublist) - min_len
-            #if to_cut>0:
-                #self.R[i] = sublist[:-to_cut]
         
         mean_R = np.mean(self.R, axis=0)
         std_R = np.std(self.R, axis=0)/np.sqrt(self.n_simulations)
 
         plt.plot(mean_R)
         plt.fill_between(range(mean_R.shape[0]), mean_R-std_R, mean_R+std_R, alpha=0.4)
+        plt.show()
+
+        mean_RW = np.mean(self.RW, axis=0)
+        std_RW = np.std(self.RW, axis=0)/np.sqrt(self.n_simulations)
+        mean_OPT = np.mean(self.OPT, axis=0)
+        std_OPT = np.std(self.OPT, axis=0)/np.sqrt(self.n_simulations)
+
+        plt.plot(mean_RW)
+        plt.plot(mean_OPT)
+        plt.fill_between(range(mean_RW.shape[0]), mean_RW-std_RW, mean_RW+std_RW, alpha=0.4)
+        plt.show()
+
+        cum_RW = np.cumsum(self.RW, axis=1)
+        cum_OPT = np.cumsum(self.OPT, axis=1)
+
+        mean_cum_RW = np.mean(cum_RW, axis=0)
+        std_cum_RW = np.std(cum_RW, axis=0)/np.sqrt(self.n_simulations)
+
+        mean_cum_OPT = np.mean(cum_OPT, axis=0)
+        std_cum_OPT = np.std(cum_OPT, axis=0)/np.sqrt(self.n_simulations)
+
+        plt.plot(mean_cum_RW)
+        plt.plot(mean_cum_OPT)
+        plt.fill_between(range(mean_cum_RW.shape[0]), mean_cum_RW-std_cum_RW, mean_cum_RW+std_cum_RW, alpha=0.4)
         plt.show()
     
     def create_context_bandit(self, split):

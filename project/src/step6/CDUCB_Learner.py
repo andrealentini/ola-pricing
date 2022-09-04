@@ -3,7 +3,7 @@ from Learner import *
 from cusum import CUSUM
 
 class CDUCB_Learner(Learner):
-    def __init__(self, prices, M=40, eps=0.05, h=5, alpha=0.01):
+    def __init__(self, prices, M=25, eps=0.05, h=10, alpha=0.01):
         super().__init__(prices)
         self.M = M
         self.eps = eps
@@ -39,6 +39,7 @@ class CDUCB_Learner(Learner):
         combinations = combinations * self.prices.shape[0]
         pulled_arms_idx = combinations[np.argmax(combinations_rewards)]
         self.previous_arms = pulled_arms_idx
+        # print("Pulled arms: ", pulled_arms_idx)
         return pulled_arms_idx
     
     def reset(self):
@@ -58,8 +59,8 @@ class CDUCB_Learner(Learner):
             self.rewards_per_item_arm[i][pulled_arms[i]] = self.rewards_per_item_arm[i][pulled_arms[i]] + rewards[i]
             self.valid_rewards_per_item_arm[i][pulled_arms[i]] = self.valid_rewards_per_item_arm[i][pulled_arms[i]] + rewards[i]
             self.collected_rewards_per_item[i] = self.collected_rewards_per_item[i] + rewards[i]
-
-            self.means[i][pulled_arms[i]] = np.mean(self.valid_rewards_per_item_arm[i][pulled_arms[i]])
+            if len(rewards[i]) != 0:
+                self.means[i][pulled_arms[i]] = np.mean(self.valid_rewards_per_item_arm[i][pulled_arms[i]])
         
         for idx in range(self.n_items):
             total_valid_samples = sum([len(x) for x in self.valid_rewards_per_item_arm[idx]])

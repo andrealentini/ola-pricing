@@ -18,46 +18,46 @@ np.random.seed(seed)
 # Set the value of all candidate prices for each item(rows)
 prices = np.array([[1, 2, 3, 4],
                    [1, 2, 3, 4],
-                   [1, 2, 3, 4],
-                   [1, 2, 3, 4],
-                   [1, 2, 3, 4]])
+                   [2, 3, 4, 5],
+                   [2, 3, 4, 5],
+                   [3, 4, 5, 6]])
 
 # Set the matrix of conversion rates for each couple item-arm for all the three user classes
-conversion_rates = np.array([[[1, 1, 1, 1],
-                              [1, 1, 1, 1],
-                              [1, 1, 1, 1],
-                              [1, 1, 1, 1],
-                              [1, 1, 1, 1]],
+conversion_rates = np.array([[[0.85, 0.8, 0.75, 0.7],
+                              [0.85, 0.8, 0.75, 0.7],
+                              [0.8, 0.75, 0.7, 0.65],
+                              [0.8, 0.75, 0.7, 0.65],
+                              [0.75, 0.7, 0.65, 0.6]],
 
-                             [[0.5, 0.4, 0.3, 0.2],
-                              [0.5, 0.4, 0.3, 0.2],
-                              [0.5, 0.4, 0.3, 0.2],
-                              [0.5, 0.4, 0.3, 0.2],
-                              [0.5, 0.4, 0.3, 0.2]],
+                             [[0.5, 0.45, 0.4, 0.35],
+                              [0.5, 0.45, 0.4, 0.35],
+                              [0.45, 0.4, 0.35, 0.3],
+                              [0.45, 0.4, 0.35, 0.3],
+                              [0.4, 0.35, 0.3, 0.25]],
 
-                             [[0.1, 0.09, 0.08, 0.07],
-                              [0.1, 0.09, 0.08, 0.07],
-                              [0.1, 0.09, 0.08, 0.07],
-                              [0.1, 0.09, 0.08, 0.07],
+                             [[0.2, 0.15, 0.1, 0.05],
+                              [0.2, 0.15, 0.1, 0.05],
+                              [0.15, 0.1, 0.05, 0.05],
+                              [0.15, 0.1, 0.05, 0.05],
                               [0.1, 0.09, 0.08, 0.07]]])
 
 # Set the means and std of the number of items sold for each item for all the user classes
-n_items_to_buy_distr = np.array([[[19, 2],
-                                  [19, 2],
-                                  [19, 2],
-                                  [19, 2],
-                                  [19, 2]],
+n_items_to_buy_distr = np.array([[[2, 2],
+                                  [2, 2],
+                                  [2, 2],
+                                  [2, 2],
+                                  [2, 2]],
 
-                                 [[10, 2],
-                                  [10, 2],
-                                  [10, 2],
-                                  [10, 2],
-                                  [10, 2]],
+                                 [[1.5, 2],
+                                  [1.5, 2],
+                                  [1.5, 2],
+                                  [1.5, 2],
+                                  [1.5, 2]],
 
                                  [[1, 2],
-                                  [2, 2],
                                   [1, 2],
-                                  [2, 2],
+                                  [1, 2],
+                                  [1, 2],
                                   [1, 2]]])
 
 # Set the mapping of the two secondary items showed for each primary item
@@ -75,9 +75,9 @@ feature_2_dist = 0.2
 lambda_param = 0.5
 
 # Set parameters for the dirichlet that samples the alphas (probabilities to land on the page of a primary item) for each user class, the first alpha is alpha_0
-alpha_parameters = [[2,2,3,4,5,6],
-                    [2,2,3,4,5,6],
-                    [2,2,3,4,5,6]]
+alpha_parameters = [[1,2,2,2,2,2],
+                    [1,2,2,2,2,2],
+                    [1,2,2,2,2,2]]
 
 
 # ================== SIMULATION PARAMETER INITIALIZATION ================== #
@@ -89,7 +89,7 @@ print('Probability matrix: \n', prob_matrix)
 np.random.seed(None)
 
 # Instantiate the bandit used to learn prices
-bandit = UCB_Learner(prices)
+bandit = TS_Learner(prices)
 # Instantiate the estimator of the number of items sold (Step 4)
 items_sold_estimator = Number_of_sold_items_estimator(5, 3)
 
@@ -139,9 +139,10 @@ S = Simulator(days,
               alpha_parameters,
               seed,
               bandit,
-              False, #True if the number of sold items is uncertain
+              True, #True if the number of sold items is uncertain
               items_sold_estimator,
-              False, #True if context has to be used
+              True, #True if context has to be used
+              False,  #True if using approximation to speed up
               prices,
               prob_matrix,
               feature_1_dist,

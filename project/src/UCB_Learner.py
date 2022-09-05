@@ -73,6 +73,6 @@ class UCB_Learner(Learner):
             for idy in range(self.n_prices):
                 n = len(self.rewards_per_item_arm[idx][idy])
                 if n > 0:
-                    self.widths[idx][idy] = np.sqrt(2*np.max(self.prices[idx, :])*np.log(self.t)/n)
+                    self.widths[idx][idy] = np.sqrt(2*np.log(self.t)/n)
                 else:
                     self.widths[idx][idy] = np.inf

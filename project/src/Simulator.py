@@ -11,7 +11,7 @@ from itertools import compress
 
 class Simulator:
 
-    def __init__(self, days, users, n_simulations, alpha_parameters, seed, bandit, items_sold_uncertain, items_sold_estimator, use_context,
+    def __init__(self, days, users, n_simulations, alpha_parameters, seed, bandit, items_sold_uncertain, items_sold_estimator, use_context, estimated,
                  prices, prob_matrix, feature_1_dist, feature_2_dist, conversion_rates, primary_to_secondary_mapping, n_items_to_buy_distr, opt_per_starting_point, activation_probs):
         self.days = days
         self.users = users #should be different every day? "Every day, there is a random number of potential new customers"
@@ -22,6 +22,7 @@ class Simulator:
         self.seed = seed
         self.bandit = bandit
         self.n_items = self.e.prices.shape[0]
+        self.estimated = estimated
         #self.opt = opt
         self.opt_per_starting_point = opt_per_starting_point
         self.activations_probs = activation_probs
@@ -118,17 +119,17 @@ class Simulator:
                 # Pull the prices for the day
                 if not self.use_context:
                     if self.items_sold_uncertain:
-                        today_prices = self.bandit.pull_prices_activations(self.items_sold_estimator.values, self.activations_probs)
+                        today_prices = self.bandit.pull_prices_activations(self.items_sold_estimator.values, self.activations_probs, estimated=self.estimated)
                     else:
-                        today_prices = self.bandit.pull_prices_activations(self.e.n_items_to_buy_distr, self.activations_probs)
+                        today_prices = self.bandit.pull_prices_activations(self.e.n_items_to_buy_distr, self.activations_probs, estimated=self.estimated)
                 else:
                     context_today_prices = []
                     if self.items_sold_uncertain:
                         for bandit in self.context_bandits:
-                            context_today_prices.append(bandit.pull_prices_activations(self.items_sold_estimator.values, self.activations_probs))
+                            context_today_prices.append(bandit.pull_prices_activations(self.items_sold_estimator.values, self.activations_probs, estimated=self.estimated))
                     else:
                         for bandit in self.context_bandits:
-                            context_today_prices.append(bandit.pull_prices_activations(self.e.n_items_to_buy_distr, self.activations_probs))
+                            context_today_prices.append(bandit.pull_prices_activations(self.e.n_items_to_buy_distr, self.activations_probs, estimated=self.estimated))
                 
                 # Data structure to save the rewards
                 if not self.use_context:
@@ -263,6 +264,9 @@ class Simulator:
 
         plt.plot(mean_R)
         plt.fill_between(range(mean_R.shape[0]), mean_R-std_R, mean_R+std_R, alpha=0.4)
+        plt.title('Cumulative Regret', fontsize=20)
+        plt.xlabel('Steps', fontsize=12)
+        plt.ylabel('Cumulative Regret', fontsize=12)
         plt.show()
 
         mean_RW = np.mean(self.RW, axis=0)
@@ -273,6 +277,10 @@ class Simulator:
         plt.plot(mean_RW)
         plt.plot(mean_OPT)
         plt.fill_between(range(mean_RW.shape[0]), mean_RW-std_RW, mean_RW+std_RW, alpha=0.4)
+        plt.title('Instant Rewards', fontsize=20)
+        plt.xlabel('Steps', fontsize=12)
+        plt.ylabel('Instant Reward', fontsize=12)
+        plt.legend(['SW-UCB', 'Clairvoyant'])
         plt.show()
 
         cum_RW = np.cumsum(self.RW, axis=1)
@@ -285,8 +293,12 @@ class Simulator:
         std_cum_OPT = np.std(cum_OPT, axis=0)/np.sqrt(self.n_simulations)
 
         plt.plot(mean_cum_RW)
-        plt.plot(mean_cum_OPT)
+        plt.plot(mean_cum_OPT, '--')
         plt.fill_between(range(mean_cum_RW.shape[0]), mean_cum_RW-std_cum_RW, mean_cum_RW+std_cum_RW, alpha=0.4)
+        plt.title('Cumulative Rewards', fontsize=20)
+        plt.xlabel('Steps', fontsize=12)
+        plt.ylabel('Cumulative Reward', fontsize=12)
+        plt.legend(['SW-UCB', 'Clairvoyant'])
         plt.show()
     
     def create_context_bandit(self, split):

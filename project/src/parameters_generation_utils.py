@@ -6,8 +6,8 @@ Collection of functions that helps in the environment parameters generation
 '''
 
 #samples the alphas from a dirichlet for the 3 classes
-def alpha_generation(alpha_parameters, seed):
-    alphas = np.zeros((3,6))
+def alpha_generation(alpha_parameters, seed, n=6):
+    alphas = np.zeros((3,n))
     for user_class in range(0,3):
         alphas[user_class] = dirichlet.rvs(alpha=alpha_parameters[user_class], size=1, random_state=seed)
     return alphas

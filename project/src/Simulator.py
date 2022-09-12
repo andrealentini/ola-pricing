@@ -280,7 +280,7 @@ class Simulator:
         plt.title('Instant Rewards', fontsize=20)
         plt.xlabel('Steps', fontsize=12)
         plt.ylabel('Instant Reward', fontsize=12)
-        plt.legend(['SW-UCB', 'Clairvoyant'])
+        plt.legend([self.bandit_type.split("_", 1)[0], 'Clairvoyant'])
         plt.show()
 
         cum_RW = np.cumsum(self.RW, axis=1)
@@ -298,7 +298,7 @@ class Simulator:
         plt.title('Cumulative Rewards', fontsize=20)
         plt.xlabel('Steps', fontsize=12)
         plt.ylabel('Cumulative Reward', fontsize=12)
-        plt.legend(['SW-UCB', 'Clairvoyant'])
+        plt.legend([self.bandit_type.split("_", 1)[0], 'Clairvoyant'])
         plt.show()
     
     def create_context_bandit(self, split):

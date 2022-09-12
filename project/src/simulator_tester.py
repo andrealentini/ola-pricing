@@ -89,7 +89,7 @@ print('Probability matrix: \n', prob_matrix)
 np.random.seed(None)
 
 # Instantiate the bandit used to learn prices
-bandit = TS_Learner(prices)
+bandit = UCB_Learner(prices)
 # Instantiate the estimator of the number of items sold (Step 4)
 items_sold_estimator = Number_of_sold_items_estimator(5, 3)
 
@@ -139,10 +139,10 @@ S = Simulator(days,
               alpha_parameters,
               seed,
               bandit,
-              True, #True if the number of sold items is uncertain
+              False, #True if the number of sold items is uncertain
               items_sold_estimator,
-              True, #True if context has to be used
-              False,  #True if using approximation to speed up
+              False, #True if context has to be used
+              True,  #True if using approximation to speed up
               prices,
               prob_matrix,
               feature_1_dist,

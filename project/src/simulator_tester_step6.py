@@ -2,9 +2,9 @@ from tkinter import W
 from matplotlib import use
 import numpy as np
 import itertools
-from Simulator import Simulator
+from NonStationary_Simulator import Simulator
 from MonteCarlo_sampling import  MC_sampling
-from parameters_generation_utils import alpha_generation, prob_matrix_generation, MC_num_iterations
+from parameters_generation_utils_step6 import alpha_generation, prob_matrix_generation, MC_num_iterations
 from CDUCB_Learner import CDUCB_Learner
 from SWUCB_Learner import SWUCB_Learner
 from UCB_Learner import UCB_Learner
@@ -249,7 +249,7 @@ n_simulations = 3
 window_size = 4*int(np.sqrt(days))
 
 
-bandit = CDUCB_Learner(prices)
+bandit = UCB_Learner(prices)
 items_sold_estimator = Number_of_sold_items_estimator(5, 3)
 
 opt_per_starting_point = np.zeros((3,3,5))

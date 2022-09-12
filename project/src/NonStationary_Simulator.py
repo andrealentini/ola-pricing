@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 import matplotlib.pyplot as plt
-from Environment import Environment
+from NonStationary_Environment import Environment
 from parameters_generation_utils import alpha_generation
 from UCB_Learner import UCB_Learner
 

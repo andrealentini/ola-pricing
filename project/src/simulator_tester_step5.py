@@ -1,7 +1,12 @@
 from matplotlib import use
 import numpy as np
 import itertools
+from Simulator import Simulator
+from MonteCarlo_sampling import  MC_sampling
 from parameters_generation_utils import alpha_generation, prob_matrix_generation, MC_num_iterations
+from UCB_Learner import UCB_Learner
+from TS_Learner import TS_Learner
+from Number_of_sold_items_estimator import Number_of_sold_items_estimator
 
 from Threaded_Estimate_Probabilities import Probabilities_Estimator
 
@@ -10,65 +15,69 @@ from Threaded_Estimate_Probabilities import Probabilities_Estimator
 seed = 15
 np.random.seed(seed)
 
+# Set the value of all candidate prices for each item(rows)
 prices = np.array([[1, 2, 3, 4],
                    [1, 2, 3, 4],
-                   [1, 2, 3, 4],
-                   [1, 2, 3, 4],
-                   [1, 2, 3, 4]])
+                   [2, 3, 4, 5],
+                   [2, 3, 4, 5],
+                   [3, 4, 5, 6]])
 
-conversion_rates = np.array([[[0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4]],
+# Set the matrix of conversion rates for each couple item-arm for all the three user classes
+conversion_rates = np.array([[[0.85, 0.8, 0.75, 0.7],
+                              [0.85, 0.8, 0.75, 0.7],
+                              [0.8, 0.75, 0.7, 0.65],
+                              [0.8, 0.75, 0.7, 0.65],
+                              [0.75, 0.7, 0.65, 0.6]],
 
-                             [[0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4]],
+                             [[0.5, 0.45, 0.4, 0.35],
+                              [0.5, 0.45, 0.4, 0.35],
+                              [0.45, 0.4, 0.35, 0.3],
+                              [0.45, 0.4, 0.35, 0.3],
+                              [0.4, 0.35, 0.3, 0.25]],
 
-                             [[0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4],
-                              [0.7, 0.6, 0.5, 0.4]]])
+                             [[0.2, 0.15, 0.1, 0.05],
+                              [0.2, 0.15, 0.1, 0.05],
+                              [0.15, 0.1, 0.05, 0.05],
+                              [0.15, 0.1, 0.05, 0.05],
+                              [0.1, 0.09, 0.08, 0.07]]])
 
-n_items_to_buy_distr = np.array([[[1, 2],
+# Set the means and std of the number of items sold for each item for all the user classes
+n_items_to_buy_distr = np.array([[[2, 2],
                                   [2, 2],
-                                  [1, 2],
                                   [2, 2],
-                                  [1, 2]],
+                                  [2, 2],
+                                  [2, 2]],
+
+                                 [[1.5, 2],
+                                  [1.5, 2],
+                                  [1.5, 2],
+                                  [1.5, 2],
+                                  [1.5, 2]],
 
                                  [[1, 2],
-                                  [2, 2],
                                   [1, 2],
-                                  [2, 2],
-                                  [1, 2]],
-
-                                 [[1, 2],
-                                  [2, 2],
                                   [1, 2],
-                                  [2, 2],
+                                  [1, 2],
                                   [1, 2]]])
 
-print(n_items_to_buy_distr[:][0][0])
+# Set the mapping of the two secondary items showed for each primary item
 primary_to_secondary_mapping = np.array([[1,2],
                                          [2,3],
                                          [3,4],
                                          [4,0],
                                          [0,1]])
 
-feature_1_dist = 0.5
-feature_2_dist = 0.5
+# Set the distribution of the user features
+feature_1_dist = 0.2
+feature_2_dist = 0.2
 
+# Set the lambda value (factor that reduce the probability to click on the second secondary item showed in the page of a primary item)
 lambda_param = 0.5
 
-#the first alpha is alpha_0
-#parameters for the dirichlet that samples the alphas
-alpha_parameters = [[2,2,3,4,5,6],
-                    [2,2,3,4,5,6],
-                    [2,2,3,4,5,6]]
+# Set parameters for the dirichlet that samples the alphas (probabilities to land on the page of a primary item) for each user class, the first alpha is alpha_0
+alpha_parameters = [[1,2,2,2,2,2],
+                    [1,2,2,2,2,2],
+                    [1,2,2,2,2,2]]
 
 ######### CHANGES START HERE #########
 
@@ -90,13 +99,13 @@ estimated_prob_matrix = prob_estimator.estimate_probabilities()
 print('Original Probability Matrix: \n', np.mean(prob_matrix, axis=0))
 print('Estimated Probability Matrix: \n', estimated_prob_matrix)
 
-exit(0)
+#exit(0)
 
 ######### CHANGES END HERE #########
 
 np.random.seed(None)
 
-bandit = UCB_Learner(prices)
+bandit = TS_Learner(prices)
 items_sold_estimator = Number_of_sold_items_estimator(5, 3)
 
 days = 30
@@ -139,6 +148,8 @@ S = Simulator(days,
               bandit,
               False, #True if the number of sold items is uncertain
               items_sold_estimator,
+              False, #True if context has to be used
+              True,  #True if using approximation to speed up
               prices,
               prob_matrix,
               feature_1_dist,

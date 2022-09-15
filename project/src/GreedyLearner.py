@@ -10,8 +10,6 @@ class Greedy_Learner(Learner):
 
         self.solution = None
 
-        # TODO: assert on sorting of prices
-
         # aggregated prices and conversion rates (mean of the three classes)
         self.prices = prices    # 5x4 matrix
         self.conversion_rates = conversion_rates    # 5x4 matrix
@@ -23,7 +21,7 @@ class Greedy_Learner(Learner):
             margin += self.conversion_rates[item, price] * self.prices[item, price] * self.n_items_to_buy_distr[item, 0]
         return margin
     
-    def pull_prices(self):
+    def pull_prices_activations(self):
         if self.solution is not None:
             return self.solution
         
